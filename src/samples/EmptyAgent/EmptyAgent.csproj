@@ -4,7 +4,8 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
-	</PropertyGroup>
+	  <UserSecretsId>e123d45d-2422-4661-a4ed-4735f0d90ea6</UserSecretsId>
+  </PropertyGroup>
 
 	<ItemGroup>
 		<Compile Remove="wwwroot\**" />
