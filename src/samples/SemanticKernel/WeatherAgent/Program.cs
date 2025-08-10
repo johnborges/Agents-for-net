@@ -41,9 +41,13 @@ if (builder.Configuration.GetSection("AIServices").GetValue<bool>("UseAzureOpenA
 }
 else
 {
-    builder.Services.AddOpenAIChatCompletion(
-        modelId: builder.Configuration.GetSection("AIServices:OpenAI").GetValue<string>("ModelId")!,
-        apiKey: builder.Configuration.GetSection("AIServices:OpenAI").GetValue<string>("ApiKey")!);
+    // builder.Services.AddOllamaChatCompletion(
+    //     modelId: builder.Configuration.GetSection("AIServices:Ollama").GetValue<string>("ModelId")!,
+    //     endpoint: new Uri(builder.Configuration.GetSection("AIServices:Ollama").GetValue<string>("Endpoint")!));
+
+    builder.Services.AddGoogleAIGeminiChatCompletion(
+        modelId: builder.Configuration.GetSection("AIServices:Gemini").GetValue<string>("ModelId")!,
+        apiKey: builder.Configuration.GetSection("AIServices:Gemini").GetValue<string>("ApiKey")!);
 }
 
 // Add AgentApplicationOptions from appsettings section "AgentApplication".
