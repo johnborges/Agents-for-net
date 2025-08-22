@@ -2,42 +2,130 @@
   "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
   "manifestVersion": "1.22",
   "version": "1.0.0",
-  "id": "${{AAD_APP_CLIENT_ID}}",
+  "id": "e176fb6e-83fe-464e-8080-69baa03d4f28",
+  "localizationInfo": {
+    "defaultLanguageTag": "en-us",
+    "additionalLanguages": [
+      {
+        "languageTag": "es-mx",
+        "file": "es-mx.json"
+      }
+    ]
+  },
   "developer": {
-    "name": "Microsoft, Inc.",
-    "websiteUrl": "https://example.azurewebsites.net",
-    "privacyUrl": "https://example.azurewebsites.net/privacy",
-    "termsOfUseUrl": "https://example.azurewebsites.net/termsofuse"
+    "name": "John Borges",
+    "websiteUrl": "https://www.microsoft.com",
+    "privacyUrl": "https://www.microsoft.com/privacy",
+    "termsOfUseUrl": "https://www.microsoft.com/termsofuse"
   },
   "icons": {
     "color": "color.png",
     "outline": "outline.png"
   },
   "name": {
-    "short": "AgentSDK WeatherAgent",
-    "full": "AgentSDK WeatherAgent"
+    "short": "Employee Self-Service",
+    "full": "Employee Self-Service"
   },
   "description": {
-    "short": "Sample demonstrating AgentSDK, Teams, and SemanticKernel",
-    "full": "Sample demonstrating AgentSDK, Teams, and SemanticKernel"
+    "short": "Chat with an AI assistant for HR, IT, and workplace requests—right in Teams.",
+    "full": "Get the help you need—fast. This AI-powered self-service assistant lives inside Microsoft Teams and is ready 24/7 to answer questions, guide you through HR and IT processes, and help you get work done without switching apps. Ask it about benefits, payroll, or company policies. Request time off or parental leave. Order equipment, get tech support, or check the status of a help desk ticket—all through a simple chat. No forms to hunt down, no complicated portals to navigate. Behind the scenes, the assistant connects securely to your organizations knowledge sources and business systems, such as SharePoint, Microsoft Graph, Workday, ServiceNow, or SAP. It uses natural language understanding to deliver accurate, relevant answers and trigger workflows automatically. Works in Microsoft 365 CoPilot."
   },
   "accentColor": "#FFFFFF",
   "copilotAgents": {
     "customEngineAgents": [
       {
-        "id": "${{AAD_APP_CLIENT_ID}}",
+        "id": "e176fb6e-83fe-464e-8080-69baa03d4f28",
         "type": "bot"
       }
     ]
   },
   "bots": [
     {
-      "botId": "${{AAD_APP_CLIENT_ID}}",
+      "botId": "e176fb6e-83fe-464e-8080-69baa03d4f28",
       "scopes": [
         "personal"
       ],
       "supportsFiles": false,
       "isNotificationOnly": false
+    }
+  ],
+  "composeExtensions": [
+    {
+      "botId": "e176fb6e-83fe-464e-8080-69baa03d4f28",
+      "commands": [
+        {
+          "id": "hrQuestions",
+          "title": "Ask HR",
+          "type": "query",
+          "context": [
+            "compose",
+            "commandBox"
+          ],
+          "description": "Ask questions about benefits, policies, and HR procedures",
+          "semanticDescription": "Inquire about employee health benefits and related HR policies.",
+          "samplePrompts": [
+            { "text": "What health benefits are available to employees?"},
+            { "text": "How do I enroll in the company health insurance plan?"},
+            { "text": "What is the process for requesting parental leave?"},
+            { "text": "What resources are available for employee wellness?"},
+            { "text": "What are the company holidays?"}
+          ],
+          "parameters": [
+            {
+              "name": "question",
+              "title": "HR Question",
+              "description": "What health benefits are available to employees?",
+              "semanticDescription": "Inquire about employee health benefits and related HR policies.",
+              "inputType": "text"
+            }
+          ]
+        },
+        {
+          "id": "timeOffRequest",
+          "title": "Request Time Off",
+          "type": "action",
+          "context": [
+            "compose"
+          ],
+          "description": "Submit a request for vacation or personal time off"
+        },
+        {
+          "id": "itSupport",
+          "title": "IT Support",
+          "type": "query",
+          "context": [
+            "compose",
+            "commandBox"
+          ],
+          "description": "Get help with technical issues or equipment requests",
+          "parameters": [
+            {
+              "name": "issue",
+              "title": "IT Issue",
+              "description": "Describe your technical issue or equipment need",
+              "inputType": "text"
+            }
+          ]
+        },
+        {
+          "id": "checkStatus",
+          "title": "Check Request Status",
+          "type": "query",
+          "context": [
+            "compose",
+            "commandBox"
+          ],
+          "description": "Check the status of your submitted requests",
+          "parameters": [
+            {
+              "name": "requestId",
+              "title": "Request ID",
+              "description": "Enter your request ID or reference number",
+              "inputType": "text"
+            }
+          ]
+        }
+      ]
     }
   ],
   "permissions": [

@@ -1,0 +1,7 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/teams/v1.22/MicrosoftTeams.schema.json",
+  "name.short": "Agente de Autoservicio para Empleados",
+  "name.full": "Agente de Autoservicio para Empleados",
+  "description.short": "Chatea con un asistente de IA para solicitudes de RH, TI y del lugar de trabajo—directamente en Teams.",
+  "description.full": "Obtén la ayuda que necesitas—rápido. Este asistente de autoservicio impulsado por IA vive dentro de Microsoft Teams y está listo 24/7 para responder preguntas, guiarte a través de procesos de RH y TI, y ayudarte a realizar tu trabajo sin cambiar de aplicaciones. Pregúntale sobre beneficios, nómina o políticas de la empresa. Solicita tiempo libre o licencia parental. Ordena equipo, obtén soporte técnico o verifica el estado de un ticket de mesa de ayuda—todo a través de un chat sencillo. Sin formularios que buscar, sin portales complicados que navegar. Entre bastidores, el asistente se conecta de forma segura a las fuentes de conocimiento y sistemas empresariales de tu organización, como SharePoint, Microsoft Graph, Workday, ServiceNow o SAP. Utiliza comprensión de lenguaje natural para entregar respuestas precisas y relevantes y activar flujos de trabajo automáticamente."
+}
