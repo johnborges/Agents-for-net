@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for GitVersioning
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
