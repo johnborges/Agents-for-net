@@ -4,9 +4,6 @@
 name: Build and deploy ASP.Net Core app to Azure Web App - bot-samples
 
 on:
-  push:
-    branches:
-      - empty-agent
   workflow_dispatch:
 
 jobs:
