@@ -25,29 +25,18 @@ builder.Services.AddHttpClient();
 // Register Semantic Kernel
 builder.Services.AddKernel();
 
-// Register the AI service of your choice. AzureOpenAI and OpenAI are demonstrated...
-if (builder.Configuration.GetSection("AIServices").GetValue<bool>("UseAzureOpenAI"))
+// Register the AI service of your choice. Gemini and Ollama are demonstrated...
+if (builder.Configuration.GetSection("AIServices").GetValue<bool>("UseGemini"))
 {
-    builder.Services.AddAzureOpenAIChatCompletion(
-        deploymentName: builder.Configuration.GetSection("AIServices:AzureOpenAI").GetValue<string>("DeploymentName")!,
-        endpoint: builder.Configuration.GetSection("AIServices:AzureOpenAI").GetValue<string>("Endpoint")!,
-        apiKey: builder.Configuration.GetSection("AIServices:AzureOpenAI").GetValue<string>("ApiKey")!);
-
-    //Use the Azure CLI (for local) or Managed Identity (for Azure running app) to authenticate to the Azure OpenAI service
-    //credentials: new ChainedTokenCredential(
-    //   new AzureCliCredential(),
-    //   new ManagedIdentityCredential()
-    //));
-}
-else
-{
-    // builder.Services.AddOllamaChatCompletion(
-    //     modelId: builder.Configuration.GetSection("AIServices:Ollama").GetValue<string>("ModelId")!,
-    //     endpoint: new Uri(builder.Configuration.GetSection("AIServices:Ollama").GetValue<string>("Endpoint")!));
-
     builder.Services.AddGoogleAIGeminiChatCompletion(
         modelId: builder.Configuration.GetSection("AIServices:Gemini").GetValue<string>("ModelId")!,
         apiKey: builder.Configuration.GetSection("AIServices:Gemini").GetValue<string>("ApiKey")!);
+}
+else
+{
+    builder.Services.AddOllamaChatCompletion(
+        modelId: builder.Configuration.GetSection("AIServices:Ollama").GetValue<string>("ModelId")!,
+        endpoint: new Uri(builder.Configuration.GetSection("AIServices:Ollama").GetValue<string>("Endpoint")!));
 }
 
 // Add AgentApplicationOptions from appsettings section "AgentApplication".
@@ -76,7 +65,7 @@ WebApplication app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
 
-app.MapGet("/", () => "Microsoft Agents SDK Sample");
+app.MapGet("/", () => "🤖 Beep boop... App initialized successfully.");
 
 // This receives incoming messages from Azure Bot Service or other SDK Agents
 var incomingRoute = app.MapPost("/api/messages", async (HttpRequest request, HttpResponse response, IAgentHttpAdapter adapter, IAgent agent, CancellationToken cancellationToken) =>
