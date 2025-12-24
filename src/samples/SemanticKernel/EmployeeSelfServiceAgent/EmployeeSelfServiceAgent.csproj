@@ -4,7 +4,7 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>disable</ImplicitUsings>
-		<NoWarn>$(NoWarn);SKEXP0110;SKEXP0010</NoWarn>
+		<NoWarn>$(NoWarn);SKEXP0110;SKEXP0010;SKEXP0070</NoWarn>
 		<Nullable>enable</Nullable>
 		<UserSecretsId>e123d45d-2422-4661-a4ed-4735f0d90ea6</UserSecretsId>
 	</PropertyGroup>
@@ -32,6 +32,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\libraries\Authentication\Authentication.Msal\Microsoft.Agents.Authentication.Msal.csproj" />
 		<ProjectReference Include="..\..\..\libraries\Hosting\AspNetCore\Microsoft.Agents.Hosting.AspNetCore.csproj" />
+		<ProjectReference Include="..\..\..\libraries\Builder\Microsoft.Agents.Builder.csproj" />
+		<ProjectReference Include="..\..\..\libraries\Core\Microsoft.Agents.Core.csproj" />
+		<ProjectReference Include="..\..\..\libraries\Storage\Microsoft.Agents.Storage.csproj" />
 	</ItemGroup>
 
 </Project>

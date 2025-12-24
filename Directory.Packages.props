@@ -95,8 +95,14 @@
 	<PackageVersion Include="Microsoft.SemanticKernel.Agents.AzureAI" Version="1.45.0-preview" />
     <PackageVersion Include="Microsoft.SemanticKernel.Connectors.AzureOpenAI" Version="1.45.0" />
     <PackageVersion Include="Microsoft.SemanticKernel.Connectors.OpenAI" Version="1.45.0" />
+    <PackageVersion Include="Microsoft.SemanticKernel.Connectors.Google" Version="1.46.0-alpha" />
+    <PackageVersion Include="Microsoft.SemanticKernel.Connectors.Ollama" Version="1.46.0-alpha" />
     <!-- OpenAI -->
     <PackageVersion Include="OpenAI" Version="2.1.0" />
+    <PackageVersion Include="Microsoft.Extensions.AI" Version="9.5.0" />
+    <!-- Ollama -->
+    <PackageVersion Include="OllamaSharp" Version="5.1.12" />
+    <!-- Azure OpenAI -->
 	<PackageVersion Include="Azure.AI.OpenAI" Version="2.1.0" />
     <!-- TeamsAI -->
     <PackageVersion Include="JsonSchema.Net" Version="6.1.2" />

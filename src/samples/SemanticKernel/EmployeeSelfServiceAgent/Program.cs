@@ -12,6 +12,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.SemanticKernel;
 using System.Threading;
 using WeatherAgent;
+using System;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
