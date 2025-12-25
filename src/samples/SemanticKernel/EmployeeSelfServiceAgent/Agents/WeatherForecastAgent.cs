@@ -9,9 +9,9 @@ using System;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
-using WeatherAgent.Plugins;
+using EmployeeSelfServiceAgent.Plugins;
 
-namespace WeatherAgent.Agents;
+namespace EmployeeSelfServiceAgent.Agents;
 
 public class WeatherForecastAgent
 {

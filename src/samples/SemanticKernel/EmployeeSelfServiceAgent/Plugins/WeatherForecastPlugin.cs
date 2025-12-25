@@ -6,7 +6,7 @@ using Microsoft.Agents.Builder;
 using Microsoft.SemanticKernel;
 using System.Threading.Tasks;
 
-namespace WeatherAgent.Plugins;
+namespace EmployeeSelfServiceAgent.Plugins;
 
 public class WeatherForecastPlugin(ITurnContext turnContext)
 {
