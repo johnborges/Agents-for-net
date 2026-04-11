@@ -14,12 +14,12 @@ namespace Microsoft.Agents.Builder.UserAuth
 {
     public abstract class OBOExchange
     {
-        private readonly IConnections _connections;
-
         public OBOExchange(IConnections connections)
         {
-            _connections = connections ?? throw new ArgumentNullException(nameof(connections));
+            Connections = connections ?? throw new ArgumentNullException(nameof(connections));
         }
+
+        protected IConnections Connections { get; private set; }
 
         protected abstract OBOSettings GetOBOSettings();
 
@@ -43,7 +43,7 @@ namespace Microsoft.Agents.Builder.UserAuth
             // Can we even exchange this?
             if (!token.IsExchangeable)
             {
-                throw Core.Errors.ExceptionHelper.GenerateException<InvalidOperationException>(ErrorHelper.OBONotExchangeableToken, null, [connectionName]);
+                throw Core.Errors.ExceptionHelper.GenerateException<InvalidOperationException>(ErrorHelper.OBONotExchangeableToken, null, [token.ConnectionName]);
             }
 
             // Can the named Connection even do this?
@@ -78,11 +78,11 @@ namespace Microsoft.Agents.Builder.UserAuth
             if (string.IsNullOrEmpty(connectionName))
             {
                 // Use default connection from turn context
-                tokenProvider = _connections.GetTokenProvider(turnContext.Identity, turnContext.Activity);
+                tokenProvider = Connections.GetTokenProvider(turnContext.Identity, turnContext.Activity);
             }
             else
             {
-                _connections.TryGetConnection(connectionName, out tokenProvider);
+                Connections.TryGetConnection(connectionName, out tokenProvider);
             }
 
             if (tokenProvider is not IOBOExchange)

@@ -8,6 +8,8 @@ using Microsoft.Agents.Core.Errors;
 using Microsoft.Agents.Core.Models;
 using Microsoft.Agents.Storage;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -22,6 +24,7 @@ namespace Microsoft.Agents.Builder.UserAuth.AgenticAuth
     {
         private readonly IConnections _connections;
         private readonly AgenticAuthSettings _a365AuthSettings;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Required constructor for type loader construction.
@@ -30,8 +33,9 @@ namespace Microsoft.Agents.Builder.UserAuth.AgenticAuth
         /// <param name="storage"></param>
         /// <param name="connections"></param>
         /// <param name="configurationSection"></param>
-        public AgenticUserAuthorization(string name, IStorage storage, IConnections connections, IConfigurationSection configurationSection)
-            : this(name, storage, connections, configurationSection.Get<AgenticAuthSettings>())
+        /// <param name="logger"></param>
+        public AgenticUserAuthorization(string name, IStorage storage, IConnections connections, IConfigurationSection configurationSection, ILogger logger = null)
+            : this(name, storage, connections, configurationSection.Get<AgenticAuthSettings>(), logger)
         {
         }
 
@@ -40,15 +44,17 @@ namespace Microsoft.Agents.Builder.UserAuth.AgenticAuth
         /// </summary>
         /// <param name="name">The authentication name.</param>
         /// <param name="settings">The settings to initialize the class</param>
+        /// <param name="logger"></param>
         /// <param name="storage">The storage to use.</param>
         /// <param name="connections"></param>
-        public AgenticUserAuthorization(string name, IStorage storage, IConnections connections, AgenticAuthSettings settings) 
+        public AgenticUserAuthorization(string name, IStorage storage, IConnections connections, AgenticAuthSettings settings, ILogger logger = null) 
         {
             AssertionHelpers.ThrowIfNull(connections, nameof(connections));
 
             _connections = connections;
             Name = name ?? throw new ArgumentNullException(nameof(name));
             _a365AuthSettings = settings ?? throw new ArgumentNullException(nameof(settings));
+            _logger = logger ?? NullLogger<ILogger>.Instance;
         }
 
         public string Name { get; private set; }
@@ -80,15 +86,26 @@ namespace Microsoft.Agents.Builder.UserAuth.AgenticAuth
             if (connection is not IAgenticTokenProvider agenticTokenProvider)
             {
                 throw ExceptionHelper.GenerateException<InvalidOperationException>(
-                    ErrorHelper.AgenticTokenProviderNotFound, null, $"{AgentClaims.GetAppId(turnContext.Identity)}:{turnContext.Activity.ServiceUrl}");
+                    ErrorHelper.AgenticTokenProviderNotFound, null, $"{turnContext.Identity.GetIncomingAudience()}:{turnContext.Activity.ServiceUrl}");
             }
 
-            var token = await agenticTokenProvider.GetAgenticUserTokenAsync(
-                turnContext.Activity.GetAgenticTenantId(),
-                turnContext.Activity.GetAgenticInstanceId(),
-                App.AgenticAuthorization.GetAgenticUser(turnContext),
-                exchangeScopes ?? _a365AuthSettings.Scopes,
-                cancellationToken).ConfigureAwait(false);
+            string token;
+            if (string.Equals(turnContext.Activity?.Recipient?.Role, RoleTypes.AgenticIdentity, StringComparison.OrdinalIgnoreCase))
+            {
+                token = await agenticTokenProvider.GetAgenticInstanceTokenAsync(
+                    turnContext.Activity.GetAgenticTenantId(),
+                    turnContext.Activity.GetAgenticInstanceId(),
+                    cancellationToken).ConfigureAwait(false);
+            }
+            else
+            {
+                token = await agenticTokenProvider.GetAgenticUserTokenAsync(
+                    turnContext.Activity.GetAgenticTenantId(),
+                    turnContext.Activity.GetAgenticInstanceId(),
+                    turnContext.Activity.GetAgenticUser(),
+                    exchangeScopes ?? _a365AuthSettings.Scopes,
+                    cancellationToken).ConfigureAwait(false);
+            }
 
             return new TokenResponse(token: token);
         }

@@ -3,6 +3,7 @@
 //
 using Microsoft.Agents.Builder;
 using Microsoft.Agents.Core.Models;
+using Microsoft.Agents.Core.Telemetry;
 using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Concurrent;
@@ -21,7 +22,7 @@ namespace Microsoft.Agents.Hosting.AspNetCore.BackgroundQueue
         private readonly SemaphoreSlim _signal = new(0);
         private readonly EventWaitHandle _queueEmpty = new(true, EventResetMode.ManualReset);
         private readonly ConcurrentQueue<ActivityWithClaims> _activities = new();
-        private bool _stopped = false;
+        private volatile bool _stopped = false;
 
         /// <inheritdoc/>
         public bool QueueBackgroundActivity(ClaimsIdentity claimsIdentity, IChannelAdapter adapter, IActivity activity, bool proactive = false, string proactiveAudience = null, Type agentType = null, Func<InvokeResponse, Task> onComplete = null, IHeaderDictionary headers = null)
@@ -38,7 +39,18 @@ namespace Microsoft.Agents.Hosting.AspNetCore.BackgroundQueue
             // Copy to prevent unexpected side effects from later mutations of the original headers.
             var copyHeaders = headers != null ? new HeaderDictionary(headers.ToDictionary()) : [];
 
-            _activities.Enqueue(new ActivityWithClaims { ChannelAdapter = adapter, AgentType = agentType, ClaimsIdentity = claimsIdentity, Activity = activity, IsProactive = proactive, ProactiveAudience = proactiveAudience, OnComplete = onComplete, Headers = copyHeaders });
+            _activities.Enqueue(new ActivityWithClaims 
+            { 
+                ChannelAdapter = adapter, 
+                AgentType = agentType, 
+                ClaimsIdentity = claimsIdentity, 
+                Activity = activity, 
+                IsProactive = proactive, 
+                ProactiveAudience = proactiveAudience, 
+                OnComplete = onComplete, 
+                Headers = copyHeaders,
+                TelemetryActivity = System.Diagnostics.Activity.Current?.CloneActivity()
+            });
             _queueEmpty.Reset();
             _signal.Release();
             return true;
