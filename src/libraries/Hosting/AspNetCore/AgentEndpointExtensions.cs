@@ -4,7 +4,6 @@
 using Microsoft.Agents.Builder;
 using Microsoft.Agents.Builder.App;
 using Microsoft.Agents.Builder.App.Proactive;
-using Microsoft.Agents.Core;
 using Microsoft.Agents.Core.Errors;
 using Microsoft.Agents.Hosting.AspNetCore.Errors;
 using Microsoft.AspNetCore.Builder;
@@ -47,8 +46,8 @@ namespace Microsoft.Agents.Hosting.AspNetCore
         /// <summary>
         /// Represents an asynchronous method that processes an HTTP request using the specified adapter and agent.
         /// </summary>
-        /// <typeparam name="TAdapter">The type of the HTTP adapter used to handle the request. Must implement <see cref="IAgentHttpAdapter"/>.</typeparam>
-        /// <typeparam name="TAgent">The type of the agent that processes the request. Must implement <see cref="IAgent"/>.</typeparam>
+        /// <typeparam name="TAdapter">The type of the HTTP adapter used to handle the request. Must implement <see cref="Microsoft.Agents.Hosting.AspNetCore.IAgentHttpAdapter"/>.</typeparam>
+        /// <typeparam name="TAgent">The type of the agent that processes the request. Must implement <see cref="Microsoft.Agents.Builder.IAgent"/>.</typeparam>
         /// <param name="request">The HTTP request to be processed.</param>
         /// <param name="response">The HTTP response to be sent.</param>
         /// <param name="adapter">The adapter instance used to facilitate communication between the HTTP layer and the agent.</param>
@@ -60,7 +59,8 @@ namespace Microsoft.Agents.Hosting.AspNetCore
             where TAdapter : IAgentHttpAdapter;
 
         /// <summary>
-        /// This adds HTTP endpoints for all AgentApplications defined in the calling assembly.  Each AgentApplication must have been added using <see cref="ServiceCollectionExtensions.AddAgent{TAgent}(Extensions.Hosting.IHostApplicationBuilder)"/>.
+        /// This adds HTTP endpoints for all AgentApplications defined in the calling assembly using the AgentInterfaceAttribute.  Each AgentApplication must have 
+        /// been added using <see cref="Microsoft.Agents.Hosting.AspNetCore.ServiceCollectionExtensions.AddAgent{TAgent}(Microsoft.Extensions.Hosting.IHostApplicationBuilder)"/>.
         /// </summary>
         /// <param name="endpoints"></param>
         /// <param name="requireAuth"></param>
@@ -238,11 +238,11 @@ namespace Microsoft.Agents.Hosting.AspNetCore
         /// version of the calling assembly. This can be useful for diagnostics or verifying deployment
         /// details.</remarks>
         /// <param name="app">The web application instance to which the root endpoint will be mapped.</param>
-        public static void MapAgentRootEndpoint(this WebApplication app)
+        public static IEndpointConventionBuilder MapAgentRootEndpoint(this WebApplication app)
         {
             var assemblyName = System.Reflection.Assembly.GetCallingAssembly().GetName().Name;
             var assemblyVersion = System.Reflection.Assembly.GetCallingAssembly().GetName().Version?.ToString() ?? "unknown";
-            app.MapGet("/", () => $"Microsoft Agents SDK: {assemblyName}, version {assemblyVersion}");
+            return app.MapGet("/", () => $"Microsoft Agents SDK: {assemblyName}, version {assemblyVersion}");
         }
 
         /// <summary>

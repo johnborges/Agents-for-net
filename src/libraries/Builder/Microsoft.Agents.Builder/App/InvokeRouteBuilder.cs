@@ -16,9 +16,9 @@ namespace Microsoft.Agents.Builder.App
     /// RouteBuilder for routing Invoke activities in an AgentApplication.
     /// </summary>
     /// <remarks>Use this builder to define routing logic for activities of type 'invoke', such as those
-    /// triggered by adaptive cards or other client-initiated operations. The builder allows specifying matching
-    /// criteria based on the activity's name, enabling precise control over which invoke activities are handled by the
-    /// route.</remarks>
+    /// triggered by adaptive cards or other client-initiated operations. The builder allows optionally specifying
+    /// matching criteria based on the activity's name. If neither <see cref="WithName(string)"/> nor
+    /// <see cref="WithName(Regex)"/> is called, the route will match any invoke activity regardless of name.</remarks>
     public class InvokeRouteBuilder : RouteBuilderBase<InvokeRouteBuilder>
     {
         private string _invokeName;
@@ -90,7 +90,7 @@ namespace Microsoft.Agents.Builder.App
         /// also called, this selector is in addition to the Name selector.</remarks>
         /// <param name="selector">The route selector that defines the criteria for matching requests to the route. The supplied selector does
         /// not need to validate base route properties like ChannelId, Agentic, etc. An Activity type of "invoke" is enforced.</param>
-        /// <returns>The current instance of <see cref="InvokeRouteBuilder"/> with the specified selector applied.</returns>
+        /// <returns>The current instance of <see cref="Microsoft.Agents.Builder.App.InvokeRouteBuilder"/> with the specified selector applied.</returns>
         public override InvokeRouteBuilder WithSelector(RouteSelector selector)
         {
             if (_route.Selector != null)
@@ -126,7 +126,7 @@ namespace Microsoft.Agents.Builder.App
         /// maintaining consistency with the route's initial setup.</remarks>
         /// <param name="isInvoke">A value indicating whether the route should be treated as an Invoke route. The parameter is ignored, as the
         /// route is always configured for Invoke routing.</param>
-        /// <returns>The current instance of <see cref="InvokeRouteBuilder"/> with Invoke routing enabled.</returns>
+        /// <returns>The current instance of <see cref="Microsoft.Agents.Builder.App.InvokeRouteBuilder"/> with Invoke routing enabled.</returns>
         public override InvokeRouteBuilder AsInvoke(bool isInvoke = true)
         {
             return this;
@@ -151,10 +151,16 @@ namespace Microsoft.Agents.Builder.App
 
             if (_invokeName == null && _invokeRegex == null)
             {
-                throw Core.Errors.ExceptionHelper.GenerateException<InvalidOperationException>(ErrorHelper.RouteBuilderMissingProperty, null, nameof(InvokeRouteBuilder), "Name or Selector");
+                // match on any invoke activity if no name or name pattern specified and no existing selector
+                _route.Selector = (context, ct) => Task.FromResult
+                    (
+                        IsContextMatch(context, _route)
+                        && context.Activity.IsType(ActivityTypes.Invoke)
+                    );
+                return;
             }
 
-            // Just match on Activity.Name value
+            // Activity.Name
             _route.Selector = (context, ct) => Task.FromResult
                 (
                     IsContextMatch(context, _route)

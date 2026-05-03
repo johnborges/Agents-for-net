@@ -4,6 +4,7 @@
 using Azure.Core;
 using Microsoft.Agents.Authentication.Msal.Model;
 using Microsoft.Agents.Authentication.Msal.Utils;
+using Microsoft.Agents.Authentication.Telemetry.Scopes;
 using Microsoft.Agents.Core;
 using Microsoft.Agents.Core.Models;
 using Microsoft.Extensions.Configuration;
@@ -47,7 +48,7 @@ namespace Microsoft.Agents.Authentication.Msal
         /// <summary>
         /// Creates a MSAL Authentication Instance. 
         /// </summary>
-        /// <param name="systemServiceProvider">Should contain the following objects: a httpClient factory called "MSALClientFactory" and a instance of the MsalAuthConfigurationOptions object</param>
+        /// <param name="systemServiceProvider">Should contain the following objects: a httpClient factory called "MSALClientFactory" and an instance of the MsalAuthConfigurationOptions object</param>
         /// <param name="msalConfigurationSection"></param>
         public MsalAuth(IServiceProvider systemServiceProvider, IConfigurationSection msalConfigurationSection)
             : this(systemServiceProvider, new ConnectionSettings(msalConfigurationSection))
@@ -57,7 +58,7 @@ namespace Microsoft.Agents.Authentication.Msal
         /// <summary>
         /// Creates a MSAL Authentication Instance. 
         /// </summary>
-        /// <param name="systemServiceProvider">Should contain the following objects: a httpClient factory called "MSALClientFactory" and a instance of the MsalAuthConfigurationOptions object</param>
+        /// <param name="systemServiceProvider">Should contain the following objects: a httpClient factory called "MSALClientFactory" and an instance of the MsalAuthConfigurationOptions object</param>
         /// <param name="settings">Settings for this instance.</param>
         public MsalAuth(IServiceProvider systemServiceProvider, ConnectionSettings settings)
         {
@@ -88,6 +89,8 @@ namespace Microsoft.Agents.Authentication.Msal
 
             Uri instanceUri = new(resourceUrl);
             var localScopes = ResolveScopesList(instanceUri, scopes);
+
+            using var telemetryScope = new ScopeGetAccessToken(localScopes, _connectionSettings.AuthType.ToString());
 
             // Get or create existing token. 
             var cacheEntry = CacheGet(instanceUri, forceRefresh);
@@ -144,6 +147,7 @@ namespace Microsoft.Agents.Authentication.Msal
         #region IOBOExchange
         public async Task<TokenResponse> AcquireTokenOnBehalfOf(IEnumerable<string> scopes, string token)
         {
+            using var telemetryScope = new ScopeAcquireTokenOnBehalfOf(scopes);
             var msal = InnerCreateClientApplication();
             if (msal is IConfidentialClientApplication confidentialClient)
             {
@@ -167,7 +171,8 @@ namespace Microsoft.Agents.Authentication.Msal
         {
             AssertionHelpers.ThrowIfNullOrWhiteSpace(agentAppInstanceId, nameof(agentAppInstanceId));
 
-            if (InnerCreateClientApplication(tenantId) is IConfidentialClientApplication msalApplication)
+            var app = InnerCreateClientApplication(tenantId);
+            if (app is IConfidentialClientApplication msalApplication)
             {
                 var tokenResult = await msalApplication
                     .AcquireTokenForClient(["api://AzureAdTokenExchange/.default"]).WithFmiPath(agentAppInstanceId)
@@ -175,13 +180,23 @@ namespace Microsoft.Agents.Authentication.Msal
 
                 return tokenResult.AccessToken;
             }
+            else if (_connectionSettings.EnableContainerIMDS && _connectionSettings.AuthType == AuthTypes.UserManagedIdentity && app is IManagedIdentityApplication msiApp)
+            {
+                var tokenResult = await msiApp
+                    .AcquireTokenForManagedIdentity("api://AzureAdTokenExchange/.default")
+                    .ExecuteAsync(cancellationToken).ConfigureAwait(false);
 
-            throw new InvalidOperationException("Only IConfidentialClientApplication is supported for Agentic.");
+                return tokenResult.AccessToken;
+            }
+
+            throw new InvalidOperationException("Only IConfidentialClientApplication or EnableContainerIMDS+UserManagedIdentity is supported for Agentic.");
         }
 
         public async Task<string> GetAgenticInstanceTokenAsync(string tenantId, string agentAppInstanceId, CancellationToken cancellationToken = default)
         {
             AssertionHelpers.ThrowIfNullOrWhiteSpace(agentAppInstanceId, nameof(agentAppInstanceId));
+
+            using var telemetryScope = new ScopeGetAgenticInstanceToken(agentAppInstanceId);
 
             var agentTokenResult = await GetAgenticApplicationTokenAsync(tenantId, agentAppInstanceId, cancellationToken).ConfigureAwait(false);
 
@@ -206,6 +221,8 @@ namespace Microsoft.Agents.Authentication.Msal
         {
             AssertionHelpers.ThrowIfNullOrWhiteSpace(agentAppInstanceId, nameof(agentAppInstanceId));
             AssertionHelpers.ThrowIfNullOrWhiteSpace(agenticUserId, nameof(agenticUserId));
+
+            using var telemetryScope = new ScopeGetAgenticUserToken(agentAppInstanceId, agenticUserId, scopes);
 
             var agentToken = await GetAgenticApplicationTokenAsync(tenantId, agentAppInstanceId, cancellationToken).ConfigureAwait(false);
             var instanceToken = await GetAgenticInstanceTokenAsync(tenantId, agentAppInstanceId, cancellationToken).ConfigureAwait(false);

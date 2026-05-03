@@ -17,17 +17,18 @@ namespace Microsoft.Agents.Builder.App
     /// </summary>
     /// <remarks>
     /// Use <see cref="EventRouteBuilder"/> to create and configure routes that respond to event
-    /// activities. This builder allows matching event activities by name or regular expression, and supports 
-    /// channelId and agentic routing scenarios. Instances are created via the <see cref="Create"/> method 
-    /// and further configured using one of <see cref="WithName(string)"/> or <see cref="WithName(Regex)"/> 
-    /// or <see cref="WithSelector(RouteSelector)"/>.<br/><br/>
+    /// activities. This builder allows matching event activities by name or regular expression, and supports
+    /// channelId and agentic routing scenarios. Instances are created via the <see cref="Create"/> method
+    /// and optionally configured using <see cref="WithName(string)"/>, <see cref="WithName(Regex)"/>,
+    /// or <see cref="WithSelector(RouteSelector)"/>. If neither <see cref="WithName(string)"/> nor
+    /// <see cref="WithName(Regex)"/> is called, the route will match any event activity regardless of name.<br/><br/>
     /// Example usage:<br/><br/>
     /// <code>
     /// var route = EventRouteBuilder.Create()
     ///    .WithName("myEvent")
-    ///    .WithHandler(async (context, state, ct) => Task.FromResult(context.SendActivityAsync("Event received!", cancellationToken: ct)))
+    ///    .WithHandler((context, state, ct) => context.SendActivityAsync("Event received!", cancellationToken: ct))
     ///    .Build();
-    ///    
+    ///
     /// app.AddRoute(route);
     /// </code>
     /// </remarks>
@@ -133,7 +134,7 @@ namespace Microsoft.Agents.Builder.App
         /// <remarks>Events cannot be configured as invoke routes. This method always returns the
         /// current instance, regardless of the value of <paramref name="isInvoke"/>.</remarks>
         /// <param name="isInvoke">Ignored</param>
-        /// <returns>The current instance of <see cref="EventRouteBuilder"/>.</returns>
+        /// <returns>The current instance of <see cref="Microsoft.Agents.Builder.App.EventRouteBuilder"/>.</returns>
         public override EventRouteBuilder AsInvoke(bool isInvoke = true)
         {
             return this;
@@ -141,6 +142,13 @@ namespace Microsoft.Agents.Builder.App
 
         protected override void PreBuild()
         {
+            // When no name filter is specified the route matches any event — default to Last so
+            // specific-name routes take priority without callers having to set the rank explicitly.
+            if (_eventName == null && _eventRegex == null && _route.Rank == RouteRank.Unspecified)
+            {
+                _route.Rank = RouteRank.Last;
+            }
+
             if (_route.Selector != null)
             {
                 if (_eventName != null || _eventRegex != null)
@@ -158,7 +166,13 @@ namespace Microsoft.Agents.Builder.App
 
             if (_eventName == null && _eventRegex == null)
             {
-                throw Core.Errors.ExceptionHelper.GenerateException<InvalidOperationException>(ErrorHelper.RouteBuilderMissingProperty, null, nameof(EventRouteBuilder), "Name or Selector");
+                // If no name or regex specified, just match on any event
+                _route.Selector = (context, ct) => Task.FromResult
+                    (
+                        IsContextMatch(context, _route)
+                        && context.Activity.IsType(ActivityTypes.Event)
+                    );
+                return;
             }
 
             // Just match on Activity.Name value
